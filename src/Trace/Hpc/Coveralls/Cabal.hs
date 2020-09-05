@@ -17,7 +17,8 @@ import Control.Monad.Trans.Maybe
 import Data.List (intercalate, isSuffixOf)
 import Distribution.Package
 import Distribution.PackageDescription
-import Distribution.PackageDescription.Parse
+import Distribution.PackageDescription.Parsec
+import qualified Data.ByteString as BS
 import Distribution.Version
 import System.Directory
 
@@ -31,10 +32,10 @@ getCabalFile dir = do
 
 getPackageNameVersion :: FilePath -> IO (Maybe String)
 getPackageNameVersion file = do
-    orig <- readFile file
-    case parsePackageDescription orig of
-        ParseFailed _ -> return Nothing
-        ParseOk _warnings gpd -> return $ Just $ name ++ "-" ++ version
+    orig <- BS.readFile file
+    case parseGenericPackageDescriptionMaybe orig of
+        Nothing  -> return Nothing
+        Just gpd -> return $ Just $ name ++ "-" ++ version
             where pkg = package . packageDescription $ gpd
                   name = unPackageName $ pkgName pkg
                   version = showVersion (pkgVersion pkg)
